@@ -2,6 +2,7 @@ const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
 
 const queue = new Map();
+let volume = 0.5;
 
 module.exports = {
   name: 'play',
@@ -9,6 +10,16 @@ module.exports = {
   description: 'Music bot functionality',
   async execute(client, cmd, message, args, Discord) {
     const voice_channel = message.member.voice.channel;
+
+    // if (args && args[args.length - 1] && args[args.length - 1].startsWith('vol-')) {
+    //   volume = parseFloat(args.pop().replace('vol-', ''));
+    // }
+
+    if (args && args[args.length - 2] == '-vol' && !isNaN(args[args.length - 1])) {
+      volume = parseFloat(args.pop());
+      args.pop();
+    }
+
     if (!voice_channel) {
       return message.reply('You need to be in a voice channel to use this command!');
     }
@@ -90,7 +101,9 @@ const video_player = async (guild, song) => {
   }
 
   const stream = ytdl(song.url, { filter: 'audioonly' });
-  song_queue.connection.play(stream, { seek: 0, volume: 0.5 })
+  if (volume > 2) volume = 2;
+  if (volume <= 0) volume = 0.1;
+  song_queue.connection.play(stream, { seek: 0, volume: volume })
     .on('finish', () => {
       song_queue.songs.shift();
       video_player(guild, song_queue.songs[0]);
